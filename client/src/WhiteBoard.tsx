@@ -526,7 +526,7 @@ const removeImage = (indexToRemove: number) => {
 
   return (
     <>
-      <div className='canvas relative h-full w-full'>
+      <div className='canvas bg-white relative h-full w-screen'>
       <div className="absolute top-[2vw] left-[30vw] cursor-pointer w-full max-w-[5vw]">
         {selectedImages.map((image, index) => (
           <div key={index}>
@@ -604,7 +604,7 @@ const removeImage = (indexToRemove: number) => {
               transform: `translate(${camera.x}px, ${camera.y}px)`,
             }}
           >
-            {layerIds.map((layerId) => (
+            {layerIds?.map((layerId) => (
               <LayerComponent
                 key={layerId}
                 id={layerId}

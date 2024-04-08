@@ -1,23 +1,15 @@
 import React, { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
-import { setBoardId } from "./store/baordSlice";
-import {
-  IconCategory,
-  IconCloudDownload,
-  IconDotsVertical,
-} from "@tabler/icons-react";
-// Your dashboard component continues here...
+import { useNavigate } from "react-router-dom";
+import { IconCloudDownload,  IconDotsVertical,} from "@tabler/icons-react";
 
 const Dashboard = () => {
-  const dispatch = useDispatch();
   const navigate = useNavigate();
   const [boards, setBoards] = useState([]);
   const [boardTitle, setBoardTitle] = useState("");
+  const [boardDetails, setBoardDetails] = useState({ title: "", description: "" });
   const [state, setState] = useState();
   const [updateComponent, showUpdateComponent] = useState(false);
   const [value, updateValue] = useState("");
-  const [instantData, setInstantData] = useState(false);
   const fetchAllboards = async () => {
     try {
       const boards = await fetch("http://localhost:5000/getAllboards");
@@ -36,10 +28,9 @@ const Dashboard = () => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ boardTitle }),
+        body: JSON.stringify({ title: boardTitle }),
       });
       const data = await board.json();
-      console.log(data, "data mera");
       setBoards([...boards, data]);
       setBoardTitle("");
     } catch (error) {
@@ -48,9 +39,6 @@ const Dashboard = () => {
   };
 
   const handleBoardClick = (boardId) => {
-    dispatch(setBoardId(boardId));
-    console.log(boardId, "boardId in dashboard");
-    localStorage.setItem("boardId", boardId);
     navigate(`/board/${boardId}`);
   };
   async function deleteBoard(id) {
@@ -61,25 +49,30 @@ const Dashboard = () => {
     console.log(data, "data");
     setBoards(boards.filter((board) => board._id !== id));
   }
-  async function updateTitle(e, id) {
-    e.preventDefault();
-    const board = await fetch(`http://localhost:5000/updateBoard/${id}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ boardTitle: value }),
-    });
-    const data = await board.json();
-    console.log(data, "updated data");
-    updateValue("");
-    const boardData = boards.find((board) => board._id === id);
-    boardData.boardTitle = data.boardTitle;
 
-    setInstantData(true);
-    // console.log(board, "updated board");
-    showUpdateComponent(false);
-  }
+  const updateTitle = async (e, id) => {
+    e.preventDefault();
+    const updatedBoardDetails = {
+      title: boardDetails.title,
+      description: boardDetails.description
+    };
+
+    try {
+      const board = await fetch(`http://localhost:5000/updateBoard/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updatedBoardDetails),
+      });
+      const data = await board.json();
+      setBoards(boards.map(board => board._id === id ? { ...board, title: data.title, description: data.description } : board));
+      setBoardDetails({ title: "", description: "" });
+      showUpdateComponent(false);
+    } catch (error) {
+      console.error("Error during board update:", error);
+    }
+  };
 
   useEffect(() => {
     fetchAllboards();
@@ -89,25 +82,12 @@ const Dashboard = () => {
       <div className="py-[5vw] ">
         <div className=" w-full max-w-[90vw] ml-[5.1vw]  ">
           <div className="">
-            <form
-              onSubmit={createBoard}
-              className="p-[2vw] flex justify-between"
-            >
-              <input
-                type="text"
-                placeholder="create Boards"
-                value={boardTitle}
+            <form onSubmit={createBoard} className="p-[2vw] flex justify-between" >
+              <input  type="text"  placeholder="create board" value={boardTitle}
                 onChange={(e) => setBoardTitle(e.target.value)}
-                name="boardTitle"
-                className="w-[20vw] p-[0.5vw] border-2 border-blue-600 -ml-[2vw]"
-                id=""
+                name="title" className="w-[20vw] p-[0.5vw] rounded-md border-2 focus:outline-none border-blue-600 -ml-[2vw]"
               />
-              <button
-                type="submit"
-                className="py-[0.5vw] px-[4vw] bg-blue-300 mr-[-2vw]"
-              >
-                Create
-              </button>
+              <button disabled={!boardTitle} type="submit" className="py-[0.5vw] hover:to-blue-400 rounded-md text-white px-[4vw] bg-blue-300 mr-[-2vw]">Create</button>
             </form>
           </div>
           <div className="pb-[2vw]">
@@ -120,12 +100,6 @@ const Dashboard = () => {
                   <th className="text-md px-6 py-2 border-r border-solid w-1/6 whitespace-nowrap">
                     Description
                   </th>
-                  <th className="text-md px-6 py-3 border-r border-solid w-1/6 whitespace-nowrap">
-                    DataApp Count
-                  </th>
-                  <th className="text-md px-6 py-2 border-r border-solid w-1/6 whitespace-nowrap">
-                    Job Count
-                  </th>
                   <th className="text-md px-6 py-2 border-r border-solid w-1/6 whitespace-nowrap">
                     Updated by
                   </th>
@@ -137,44 +111,20 @@ const Dashboard = () => {
                       </p>
                     </div>
                   </th>
-                  <th className="text-md px-6 py-2 border-r border-solid w-1/6"></th>{" "}
-                  {/* Empty column for the vertical dot icon */}
+                  <th className="text-md px-6 py-2 border-r border-solid w-1/6">Actions</th>{" "}
                 </tr>
               </thead>
               <tbody>
                 {boards.map((board) => (
-                  <tr
-                    key={board._id}
-                    className="border border-solid border-l border-r"
-                  >
+                  <tr key={board._id} className="border border-solid border-l border-r">
                     <td className="text-md px-6 py-2 border-r border-solid hover:cursor-pointer">
-                      <Link to={`/board/${board._id}`}>{board.boardTitle}</Link>
+                    <div onClick={()=> handleBoardClick(board?._id)}>{board.title}</div>
                     </td>
                     <td className="text-md px-6 py-2 border-r border-solid">
-                      Description
-                    </td>
-                    <td className="text-md px-6 py-2 border-r border-solid flex gap-[1vw] font-medium text">
-                      <div>
-                        <IconCategory
-                          stroke={1.75}
-                          className="text-[#B3C8CF]"
-                        />
-                      </div>
-                      <div className="text-blue-500">Create</div>
-                    </td>
-                    <td className="text-md px-6 py-2 border-r border-solid font-medium">
-                      <div className="flex gap-[1vw]">
-                        <div>
-                          <IconCategory
-                            stroke={1.75}
-                            className="text-[#B3C8CF]"
-                          />
-                        </div>
-                        <div className="text-blue-500">Shedule</div>
-                      </div>
+                      {board?.description || "No description"}
                     </td>
                     <td className="text-md px-6 py-2 border-r border-solid">
-                      afrazrajpoot@gemail.com
+                      test@gemail.com
                     </td>
                     <td
                       className="text-md px-6 py-2 border-r border-solid"
@@ -182,61 +132,61 @@ const Dashboard = () => {
                     >
                       {new Date(board.createdAt).toLocaleString()}
                     </td>
-                    <td className=" px-6 py-2 border-r border-solid relative hover:cursor-pointer">
+                    <td className=" px-6 py-2 flex items-center justify-center border-r border-solid relative hover:cursor-pointer">
                       <IconDotsVertical
                         stroke={1}
                         onClick={() => setState(board._id)}
                       />
-                      {state === board._id ? (
-                        <div className="bg-[#F6F5F5] py-[2vw] rounded-md shadow-lg px-[1.5vw] absolute right-[3vw]  flex flex-col transition-all duration-200  gap-[0.5vw]">
-                          <p
-                            className="absolute right-[1vw] top-1 font-bold hover:cursor-pointer"
-                            onClick={() => setState("")}
-                          >
+                      {state === board._id && (
+                        <div className="bg-[#F6F5F5] z-40 py-[2vw] rounded-md shadow-lg px-[1.5vw] absolute right-[3vw]  flex flex-col transition-all duration-200  gap-[0.5vw]">
+                          <p className="absolute right-[1vw] hover:bg-gray-200 w-[2vw] flex items-center justify-center h-[2vw] p-[0.5vw] rounded-md top-1 font-bold hover:cursor-pointer"
+                            onClick={() => setState("")}>
                             X
                           </p>
-                          <p
-                            className="transition-all duration-200 hover:cursor-pointer hover:bg-slate-200 py-[0.5vw] px-[2vw] rounded-md"
-                            onClick={() => deleteBoard(board._id)}
-                          >
+                          <p className="transition-all duration-200 hover:cursor-pointer hover:bg-slate-200 py-[0.5vw] px-[2vw] rounded-md"
+                            onClick={() => deleteBoard(board._id)}>
                             Delete
                           </p>
                           <hr />
-                          <p
-                            className="transition-all duration-200 hover:cursor-pointer hover:bg-slate-200 py-[0.5vw] px-[2vw] text-center rounded-md"
-                            onClick={() => showUpdateComponent(true)}
-                          >
+                          <p className="transition-all duration-200 hover:cursor-pointer hover:bg-slate-200 py-[0.5vw] px-[2vw] text-center rounded-md"
+                            onClick={() => showUpdateComponent(true)}>
                             Edit
                           </p>
                         </div>
-                      ) : (
-                        ""
                       )}
                     </td>
-                    {updateComponent ? (
-                      <section className="w-full h-screen bg-black absolute top-0 left-0 opacity-60">
-                        <p
-                          className="text-white absolute top-[2vw] right-[2vw] font-bold text-[2vw] hover:cursor-pointer"
-                          onClick={() => showUpdateComponent(false)}
-                        >
+                    {updateComponent && (
+                      <main className="w-full z-50 h-screen bg-gray-700 absolute top-0 left-0 opacity-60">
+                        <p className="text-white hover:bg-gray-400 rounded-md flex items-center justify-center w-[3vw] h-[3vw] absolute top-[2vw] right-[2vw] font-bold text-[2vw] hover:cursor-pointer"
+                          onClick={() => showUpdateComponent(false)} >
                           X
                         </p>
-                        <form
-                          className="flex justify-center items-center h-full"
-                          onSubmit={(e) => updateTitle(e, board._id)}
-                        >
+                        <section className="flex z-50 justify-center h-full items-center">
+                        <form className="bg-[#ffff] p-[3vw] rounded-xl w-[30vw] h-[20vw]" onSubmit={(e) => updateTitle(e, board._id)}>
+                        <div className="">
+                          <label htmlFor="title" className="text-[1.3vw] font-medium">Board Title</label>
                           <input
                             type="text"
-                            placeholder="update"
-                            name=""
-                            id=""
-                            onChange={(e) => updateValue(e.target.value)}
-                            className="w-[20vw] p-[0.5vw] border-2 border-blue-600 -ml-[2vw]"
+                            placeholder="enter board title"
+                            value={boardDetails?.title}
+                            onChange={(e) => setBoardDetails({ ...boardDetails, title: e.target.value })}
+                            className="w-full p-[0.5vw] text-[1vw] rounded-md border-[1px] border-gray-400 focus:outline-none"
                           />
-                        </form>
-                      </section>
-                    ) : (
-                      ""
+                        </div>
+                        <div className="mt-[2vw]">
+                          <label htmlFor="description" className="text-[1.3vw] font-medium">Board Description</label>
+                          <input
+                            type="text"
+                            placeholder="enter board description"
+                            value={boardDetails.description}
+                            onChange={(e) => setBoardDetails({ ...boardDetails, description: e.target.value })}
+                            className="w-full p-[0.5vw] text-[1vw] rounded-md border-[1px] border-gray-400 focus:outline-none"
+                          />
+                        </div>
+                        <button className="w-full p-[0.5vw] text-white text-[1vw] hover:bg-blue-600 bg-blue-500 rounded-md mt-[2vw]">Update</button>
+                      </form>
+                        </section>
+                      </main>
                     )}
                   </tr>
                 ))}

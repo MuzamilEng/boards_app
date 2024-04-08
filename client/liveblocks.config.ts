@@ -1,19 +1,13 @@
 import { createClient } from "@liveblocks/client";
 import { createRoomContext } from "@liveblocks/react";
 
-const storedBoardId = localStorage.getItem("boardId") || "6703bf37803f93318e31dbc9";
- var client;
-if (storedBoardId) {
-   client = createClient({
+  const client = createClient({
     throttle: 16,
-    authEndpoint: `http://localhost:5000/api/liveblocks-auth?boardId=${storedBoardId}`,
-  });// Presence, Storage, and other types...
-  localStorage.removeItem("boardId");
-}
-
+   publicApiKey: "pk_dev_dJFH98OBPgcmlvT_9y1yn7QZdV1JztcPRFIeFQtEwjzjR_7XwR_GjMtFTJfOU7Ua",
+  });
 
 export const {
-  suspense: {
+   suspense : {
     RoomProvider,
     useCanRedo,
     useCanUndo,
@@ -27,5 +21,5 @@ export const {
     useSelf,
     useStorage,
     useUpdateMyPresence,
-  },
+   }
 } = createRoomContext(client);

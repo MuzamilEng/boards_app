@@ -5,9 +5,9 @@ const liveblocks = new Liveblocks({
 });
 const createBoard = async (req, res) => {
   try {
-    const { boardTitle } = req.body;
+    const { title } = req.body;
     const newBoard = new Board({
-      boardTitle,
+      title,
     });
     const savedBoard = await newBoard.save();
     res.status(201).json(savedBoard);
@@ -31,10 +31,10 @@ const liveBlockAuth = async (req, res) => {
     const session = liveblocks.prepareSession(
       `user-${Math.floor(Math.random() * 10)}`,
       {
-        boardId: board?._id, // Store the board ID in the Liveblocks session
+        boardId: board?._id,
       }
     );
-    session.allow(`liveblocks:examples:*`, session.FULL_ACCESS);
+    session.allow(boardId, session.FULL_ACCESS);
 
     // Authorize the session
     const { status, body } = await session.authorize();
@@ -82,10 +82,10 @@ const deleteBoard = async (req, res) => {
 const updateBoard = async (req, res) => {
   try {
     const { id } = req.params;
-    const { boardTitle } = req.body;
+    const { title, description } = req.body;
     const updateBoard = await Board.findByIdAndUpdate(
       id,
-      { boardTitle },
+      { title, description },
       { new: true }
     );
     if (!updateBoard) {

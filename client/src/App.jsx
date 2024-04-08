@@ -1,24 +1,15 @@
-import React, { useEffect } from 'react'
-import WhiteBoard from './WhiteBoard'
+import React from 'react'
+import  { Suspense, lazy } from 'react';
 import {Routes, Route} from 'react-router-dom'
 import Dashboard from './Dashboard'
-import { useSelector } from 'react-redux';
-import { setBoardId } from './store/baordSlice';
+const LazyWhiteBoard = lazy(() => import('./WhiteBoard'));
+
 const App = () => {
-const boardId = useSelector((state) => state.board.id);
-const id = localStorage.getItem('boardId');
-
-
-  useEffect(() => {
-    setBoardId(boardId);
-  }, [useSelector, id]); // Access boardId
-
-
    return (
     <div>
       <Routes>
         <Route path="/" element={<Dashboard />} />
-        <Route path="/board/:id" element={<WhiteBoard />} />
+        <Route path="/board/:id" element={<Suspense fallback={<div>Loading...</div>}><LazyWhiteBoard /></Suspense>} />
       </Routes>
     </div>
   )
