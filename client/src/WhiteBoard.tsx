@@ -33,8 +33,8 @@ import {
 import { ReactNode } from "react";
 import SelectionBox from "./components/SelectionBox";
 import { nanoid } from "nanoid";
-import { useParams } from 'react-router-dom';
-import Draggable from 'react-draggable';
+import { Link, useParams } from "react-router-dom";
+import Draggable from "react-draggable";
 import LayerComponent from "./components/LayerComponent";
 import SelectionTools from "./components/SelectionTools";
 import useDisableScrollBounce from "./hooks/useDisableScrollBounce";
@@ -43,15 +43,13 @@ import MultiplayerGuides from "./components/MultiplayerGuides";
 import Path from "./components/Path";
 import ToolsBar from "./components/ToolsBar";
 import { sidebarInfo } from "./Data";
-import {Icon} from "@iconify/react";
+import { Icon } from "@iconify/react";
 
 const MAX_LAYERS = 100;
 
 export default function Room() {
-  
-  const {id} = useParams();
+  const { id } = useParams();
   const roomId = useExampleRoomId(id?.toString() || "");
-
 
   return (
     <RoomProvider
@@ -67,7 +65,7 @@ export default function Room() {
         layerIds: new LiveList(),
       }}
     >
-      <div className='container'>
+      <div className="container">
         <ClientSideSuspense fallback={<Loading />}>
           {() => <Canvas />}
         </ClientSideSuspense>
@@ -78,8 +76,8 @@ export default function Room() {
 
 function Loading() {
   return (
-    <div className='container'>
-      <div className='loading'>
+    <div className="container">
+      <div className="loading">
         <img src="https://liveblocks.io/loading.svg" alt="Loading" />
       </div>
     </div>
@@ -486,102 +484,160 @@ function Canvas() {
     ]
   );
 
-  const [searchImage, setSearchImages] = useState('');
+  const [searchImage, setSearchImages] = useState("");
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
-  const [showCancelBtn, setShowCancelButton] = useState(false)
-  
+  const [showCancelBtn, setShowCancelButton] = useState(false);
+
   const toggleDropdown = (title: string) => {
     setOpenDropdown(openDropdown === title ? null : title);
   };
-      
+
   const handleSearchImage = (e: React.ChangeEvent<HTMLInputElement>) => {
     const searchTerm = e.target.value.toLowerCase();
     setSearchImages(searchTerm);
-    
+
     // Check if the searched image exists in any dropdown items
-    const foundDropdown = sidebarInfo.find(category => 
-      category.items.some(item => item.name.toLowerCase().includes(searchTerm))
+    const foundDropdown = sidebarInfo.find((category) =>
+      category.items.some((item) =>
+        item.name.toLowerCase().includes(searchTerm)
+      )
     );
-    
+
     if (foundDropdown) {
       setOpenDropdown(foundDropdown.title);
     } else {
       setOpenDropdown(null);
     }
   };
-  
-  const filterImages = sidebarInfo?.flatMap(category => category.items)
-  .filter(item => item.name.toLowerCase().includes(searchImage));
 
-// console.log(filterImages, "filterImages");
+  const filterImages = sidebarInfo
+    ?.flatMap((category) => category.items)
+    .filter((item) => item.name.toLowerCase().includes(searchImage));
 
-const handleImageSelect = (imageUrl: string) => {
-  setSelectedImages(prevImages => [...prevImages, imageUrl]);
-};
+  // console.log(filterImages, "filterImages");
 
-const removeImage = (indexToRemove: number) => {
-  setSelectedImages(prevImages => prevImages.filter((_, index) => index !== indexToRemove));
-};
+  const handleImageSelect = (imageUrl: string) => {
+    setSelectedImages((prevImages) => [...prevImages, imageUrl]);
+  };
+
+  const removeImage = (indexToRemove: number) => {
+    setSelectedImages((prevImages) =>
+      prevImages.filter((_, index) => index !== indexToRemove)
+    );
+  };
 
   return (
     <>
-      <div className='canvas bg-white relative h-full w-screen'>
-      <div className="absolute top-[2vw] left-[30vw] cursor-pointer w-full max-w-[5vw]">
-        {selectedImages.map((image, index) => (
-          <div key={index}>
-            <Draggable>
-              <section className="relative">
-                {showCancelBtn && <p className="p-[0.5vw] absolute top-0 right-0 cursor-pointer flex items-center justify-center bg-[#383737] w-[1vw] h-[1vw] text-white text-center rounded-full text-[0.7vw]" onClick={() => removeImage(index)}>x</p>}
-                <img onClick={()=> setShowCancelButton(true)}  src={image} alt={`Selected image ${index}`} className="w-full" />
-              </section>
-            </Draggable>
-          </div>
-        ))}
-      </div>
-      <div className="absolute bg-white  w-full max-w-[21.5vw] shadow-lg rounded-lg  p-[1vw] left-0 top-[7vw] h-[40vw]">
-        <nav className="flex items-center p-[0.7vw] rounded-full bg-gray-100">
-          <Icon icon="charm:search" className="text-[1.3vw] text-gray-500" />
-          <input type="text" placeholder="Search..." onChange={handleSearchImage} className="w-full ml-[0.5vw] text-[1vw] border-none focus:outline-none bg-inherit" />
-        </nav>
-        <aside className="mt-[1vw] w-full p-[0.5vw] scrollbar-hide overflow-y-scroll h-[25vw]">
-        {searchImage && (
-        <div className="w-full">
-          <div className="w-full mb-[0.5vw]">
-            <figure>
-             {filterImages[0]?.img && <img src={filterImages[0]?.img} onClick={() => handleImageSelect(filterImages[0]?.img)} alt={filterImages[0]?.name} className="w-[2vw] cursor-pointer h-[2vw] m-[0.5vw]" />}
-              <span className="text-[0.8vw] w-[3vw] text-center">{filterImages[0]?.name}</span>
-            </figure>
-          </div>
-        </div>
-      )}
-       {sidebarInfo?.map((item, index) => (
-    <div className="w-full" key={index}>
-      <p className="text-[1vw] hover:bg-slate-50 border-b-[0.1vw] p-[0.3vw] flex justify-between items-center font-bold text-gray-500 mb-[0.5vw] cursor-pointer" onClick={() => toggleDropdown(item?.title)}>
-        <span>{item.title}</span>
-        <Icon icon="ep:arrow-down-bold" className="text-[1vw] text-gray-700" />
-      </p>
-      {openDropdown === item.title && (
-        <div className="grid grid-cols-2 gap-[1vw] w-full">
-          {item.items.map((imageItem, imageIndex) => (
-            <figure key={imageIndex}>
-              <img src={imageItem?.img} onClick={() => handleImageSelect(imageItem?.img)} alt={imageItem?.name} className="w-[2vw] cursor-pointer h-[2vw] m-[0.5vw]" />
-              <span className="text-[0.8vw] w-[3vw] text-center">{imageItem?.name}</span>
-            </figure>
+      <div className="canvas bg-white relative h-full w-screen">
+        <div className="absolute top-[2vw] left-[30vw] cursor-pointer w-full max-w-[5vw]">
+          {selectedImages.map((image, index) => (
+            <div key={index}>
+              <Draggable>
+                <section className="relative">
+                  {showCancelBtn && (
+                    <p
+                      className="p-[0.5vw] absolute top-0 right-0 cursor-pointer flex items-center justify-center bg-[#383737] w-[1vw] h-[1vw] text-white text-center rounded-full text-[0.7vw]"
+                      onClick={() => removeImage(index)}
+                    >
+                      x
+                    </p>
+                  )}
+                  <img
+                    onClick={() => setShowCancelButton(true)}
+                    src={image}
+                    alt={`Selected image ${index}`}
+                    className="w-full"
+                  />
+                </section>
+              </Draggable>
+            </div>
           ))}
         </div>
-      )}
-    </div>
-     ))}
-    </aside>
-    <div className="-mt-[1vw] ml-[5vw]">
-        {/* <Draggable> */}
-              <section className="relative w-full max-w-[7vw]" onClick={()=> setSelectedImages([...selectedImages, '/logo.png'])}>
-                <img  src={'/logo.png'} alt={`Selected image`} className="w-full" />
-              </section>
+        <div className="fixed bg-white  w-full max-w-[21.5vw]  shadow-lg rounded-lg  p-[1vw] left-0 h-[100vw]">
+          <Link to={"/"}>
+            <button className="bg-[#F6F5F2] p-[0.5vw] rounded-md ">
+              Dashboard
+            </button>
+          </Link>
+          <nav className="flex items-center p-[0.7vw] mt-[3vw] rounded-full bg-gray-100">
+            <Icon icon="charm:search" className="text-[1.3vw] text-gray-500" />
+            <input
+              type="text"
+              placeholder="Search..."
+              onChange={handleSearchImage}
+              className="w-full ml-[0.5vw] text-[1vw] border-none focus:outline-none bg-inherit"
+            />
+          </nav>
+          <aside className="mt-[1vw] w-full p-[0.5vw] scrollbar-hide overflow-y-scroll h-[25vw]">
+            {searchImage && (
+              <div className="w-full">
+                <div className="w-full mb-[0.5vw]">
+                  <figure>
+                    {filterImages[0]?.img && (
+                      <img
+                        src={filterImages[0]?.img}
+                        onClick={() => handleImageSelect(filterImages[0]?.img)}
+                        alt={filterImages[0]?.name}
+                        className="w-[2vw] cursor-pointer h-[2vw] m-[0.5vw]"
+                      />
+                    )}
+                    <span className="text-[0.8vw] w-[3vw] text-center">
+                      {filterImages[0]?.name}
+                    </span>
+                  </figure>
+                </div>
+              </div>
+            )}
+            {sidebarInfo?.map((item, index) => (
+              <div className="w-full" key={index}>
+                <p
+                  className="text-[1vw] hover:bg-slate-50 border-b-[0.1vw] p-[0.3vw] flex justify-between items-center font-bold text-gray-500 mb-[0.5vw] cursor-pointer"
+                  onClick={() => toggleDropdown(item?.title)}
+                >
+                  <span>{item.title}</span>
+                  <Icon
+                    icon="ep:arrow-down-bold"
+                    className="text-[1vw] text-gray-700"
+                  />
+                </p>
+                {openDropdown === item.title && (
+                  <div className="grid grid-cols-2 gap-[1vw] w-full">
+                    {item.items.map((imageItem, imageIndex) => (
+                      <figure key={imageIndex}>
+                        <img
+                          src={imageItem?.img}
+                          onClick={() => handleImageSelect(imageItem?.img)}
+                          alt={imageItem?.name}
+                          className="w-[2vw] cursor-pointer h-[2vw] m-[0.5vw]"
+                        />
+                        <span className="text-[0.8vw] w-[3vw] text-center">
+                          {imageItem?.name}
+                        </span>
+                      </figure>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </aside>
+          <div className="-mt-[1vw] ml-[5vw]">
+            {/* <Draggable> */}
+            <section
+              className="relative w-full max-w-[7vw]"
+              onClick={() =>
+                setSelectedImages([...selectedImages, "/logo.png"])
+              }
+            >
+              <img
+                src={"/logo.png"}
+                alt={`Selected image`}
+                className="w-full"
+              />
+            </section>
             {/* </Draggable> */}
+          </div>
         </div>
-      </div>
         <SelectionTools
           isAnimated={
             canvasState.mode !== CanvasMode.Translating &&
@@ -590,59 +646,61 @@ const removeImage = (indexToRemove: number) => {
           camera={camera}
           setLastUsedColor={setLastUsedColor}
         />
-       <div className="">
-         <svg
-          className='renderer_svg'
-          onWheel={onWheel}
-          onPointerDown={onPointerDown}
-          onPointerMove={onPointerMove}
-          onPointerLeave={onPointerLeave}
-          onPointerUp={onPointerUp}
-        >
-          <g
-            style={{
-              transform: `translate(${camera.x}px, ${camera.y}px)`,
-            }}
+        <div className="">
+          <svg
+            className="renderer_svg"
+            onWheel={onWheel}
+            onPointerDown={onPointerDown}
+            onPointerMove={onPointerMove}
+            onPointerLeave={onPointerLeave}
+            onPointerUp={onPointerUp}
           >
-            {layerIds?.map((layerId) => (
-              <LayerComponent
-                key={layerId}
-                id={layerId}
-                mode={canvasState.mode}
-                onLayerPointerDown={onLayerPointerDown}
-                selectionColor={layerIdsToColorSelection[layerId]}
+            <g
+              style={{
+                transform: `translate(${camera.x}px, ${camera.y}px)`,
+              }}
+            >
+              {layerIds?.map((layerId) => (
+                <LayerComponent
+                  key={layerId}
+                  id={layerId}
+                  mode={canvasState.mode}
+                  onLayerPointerDown={onLayerPointerDown}
+                  selectionColor={layerIdsToColorSelection[layerId]}
+                />
+              ))}
+              {/* Blue square that show the selection of the current users. Also contains the resize handles. */}
+              <SelectionBox
+                onResizeHandlePointerDown={onResizeHandlePointerDown}
               />
-            ))}
-            {/* Blue square that show the selection of the current users. Also contains the resize handles. */}
-            <SelectionBox
-              onResizeHandlePointerDown={onResizeHandlePointerDown}
-            />
-            {/* Selection net that appears when the user is selecting multiple layers at once */}
-            {canvasState.mode === CanvasMode.SelectionNet &&
-              canvasState.current != null && (
-                <rect
-                  className='selection_net'
-                  x={Math.min(canvasState.origin.x, canvasState.current.x)}
-                  y={Math.min(canvasState.origin.y, canvasState.current.y)}
-                  width={Math.abs(canvasState.origin.x - canvasState.current.x)}
-                  height={Math.abs(
-                    canvasState.origin.y - canvasState.current.y
-                  )}
+              {/* Selection net that appears when the user is selecting multiple layers at once */}
+              {canvasState.mode === CanvasMode.SelectionNet &&
+                canvasState.current != null && (
+                  <rect
+                    className="selection_net"
+                    x={Math.min(canvasState.origin.x, canvasState.current.x)}
+                    y={Math.min(canvasState.origin.y, canvasState.current.y)}
+                    width={Math.abs(
+                      canvasState.origin.x - canvasState.current.x
+                    )}
+                    height={Math.abs(
+                      canvasState.origin.y - canvasState.current.y
+                    )}
+                  />
+                )}
+              <MultiplayerGuides />
+              {/* Drawing in progress. Still not commited to the storage. */}
+              {pencilDraft != null && pencilDraft.length > 0 && (
+                <Path
+                  points={pencilDraft}
+                  fill={colorToCss(lastUsedColor)}
+                  x={0}
+                  y={0}
                 />
               )}
-            <MultiplayerGuides />
-            {/* Drawing in progress. Still not commited to the storage. */}
-            {pencilDraft != null && pencilDraft.length > 0 && (
-              <Path
-                points={pencilDraft}
-                fill={colorToCss(lastUsedColor)}
-                x={0}
-                y={0}
-              />
-            )}
-          </g>
-        </svg>
-       </div>
+            </g>
+          </svg>
+        </div>
       </div>
       <ToolsBar
         canvasState={canvasState}
@@ -661,8 +719,6 @@ const removeImage = (indexToRemove: number) => {
  * You can ignore it completely if you run the example locally.
  */
 function useExampleRoomId(roomId: string) {
-
-  
   const exampleRoomId = useMemo(() => {
     return roomId ? roomId : "acdeehbhb";
   }, [roomId]);
